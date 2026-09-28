@@ -1,0 +1,18 @@
+name: apk
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -o TradeNexusPro_flutter.zip && cp -r tnp/. .
+      - uses: subosito/flutter-action@v2
+        with: {channel: stable}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - run: flutter create . --platforms=android --org com.tradenexus --project-name tradenexuspro
+      - run: rm -rf test
+      - run: sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/><application#' android/app/src/main/AndroidManifest.xml
+      - run: flutter pub get && flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with: {name: apk, path: build/app/outputs/flutter-apk/app-release.apk}
